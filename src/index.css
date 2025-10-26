@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Calming grey and light blue theme */
-    --background: 210 20% 98%;
+    --background: 210 15% 93%;
     --foreground: 210 15% 20%;
 
     --card: 0 0% 100%;
