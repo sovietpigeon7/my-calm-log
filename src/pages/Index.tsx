@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Edit3 } from "lucide-react";
+import { Settings, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateSelector } from "@/components/DateSelector";
 import { GoalsSection } from "@/components/GoalsSection";
 import { NotesSection } from "@/components/NotesSection";
 import { ReminderModal } from "@/components/ReminderModal";
+import { SettingsModal } from "@/components/SettingsModal";
 import { loadEntry, saveEntry, type DayEntry } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +14,10 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentEntry, setCurrentEntry] = useState<DayEntry>(loadEntry(new Date()));
   const [reminderModalOpen, setReminderModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(
+    localStorage.getItem("background-image")
+  );
   const { toast } = useToast();
 
   // Load entry when date changes
@@ -53,8 +58,40 @@ const Index = () => {
     });
   };
 
+  const handleBackgroundChange = (image: string | null) => {
+    setBackgroundImage(image);
+    if (image) {
+      localStorage.setItem("background-image", image);
+    } else {
+      localStorage.removeItem("background-image");
+    }
+    
+    toast({
+      title: "Background updated",
+      description: image ? "Custom background applied" : "Background removed",
+    });
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div 
+      className="flex flex-col h-screen bg-background relative"
+      style={
+        backgroundImage
+          ? {
+              backgroundImage: `url(${backgroundImage})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+          : undefined
+      }
+    >
+      {/* Overlay for readability when background image is set */}
+      {backgroundImage && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+      )}
+      
+      <div className="relative z-10 flex flex-col h-screen">
       {/* Top Bar */}
       <header className="bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
@@ -66,14 +103,24 @@ const Index = () => {
               {format(selectedDate, "EEEE")}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setReminderModalOpen(true)}
-            className="h-9 w-9"
-          >
-            <Edit3 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setReminderModalOpen(true)}
+              className="h-9 w-9"
+            >
+              <Edit3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSettingsModalOpen(true)}
+              className="h-9 w-9"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -113,6 +160,15 @@ const Index = () => {
         notificationsEnabled={currentEntry.notificationsEnabled}
         onSave={handleReminderSave}
       />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        open={settingsModalOpen}
+        onOpenChange={setSettingsModalOpen}
+        backgroundImage={backgroundImage}
+        onBackgroundChange={handleBackgroundChange}
+      />
+      </div>
     </div>
   );
 };
